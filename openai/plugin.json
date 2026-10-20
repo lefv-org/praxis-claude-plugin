@@ -1,0 +1,103 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "praxis-agent",
+  "version": "0.1.0",
+  "description": "Praxis Agent answers questions on public US law (case law, the Code of Virginia, federal regulations and rulemaking), with links to its sources. Remote MCP server at praxis-agent.fly.dev, OAuth sign-in.",
+  "author": {
+    "name": "CCL Consulting LLC",
+    "email": "luis@lefv.io",
+    "url": "https://praxis-agent.fly.dev/connect"
+  },
+  "homepage": "https://praxis-agent.fly.dev/connect",
+  "repository": "https://github.com/lefv-org/praxis-claude-plugin",
+  "license": "MIT",
+  "keywords": ["law", "legal research", "case law", "statutes", "regulations", "CFR"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Praxis Agent",
+        "shortDescription": "US public law, with sources",
+        "longDescription": "Praxis Agent answers questions on public US law and links every answer to its sources.\n\nWhat it does:\n- Answers a general question on US law: statutes, court rules, case law, legal tests and elements, deadlines and limitations periods.\n- Searches US federal and state court opinions and reads a stored opinion.\n- Reads the current official text of a Code of Virginia section.\n- Reads a federal regulation (CFR or FAR) section or part from eCFR, searches the CFR by topic, lists recent Federal Register rulemaking for a CFR part, and reads public comments on a federal rule from regulations.gov.\n- Records a rating of an earlier answer, so answers can be improved.\n\nWho it is for: attorneys, paralegals, law students and other people who research US law.\n\nLimits:\n- Not covered: state regulations and state administrative codes, agency guidance, non-US law, and statutes other than the Code of Virginia (other statutes are answered from the cases that apply them).\n- Praxis gives general information on the law. It does not apply the law to a person's facts, and its answers are not legal advice.\n- Praxis has no access to firm, client or matter data. Questions need no client names, client facts or personal details.\n- Every result is marked as untrusted text from public sources.\n- Sign-in uses an email address and an access credential issued by CCL Consulting LLC.",
+        "developerName": "CCL Consulting LLC",
+        "category": "Education & Research",
+        "capabilities": [
+          "Answer questions on public US law with source links",
+          "Search and read US court opinions",
+          "Read Code of Virginia sections",
+          "Read and search federal regulations (CFR and FAR)",
+          "List federal rulemaking and public comments",
+          "Rate an answer"
+        ],
+        "websiteURL": "https://praxis-agent.fly.dev/connect",
+        "supportURL": "https://praxis-agent.fly.dev/support",
+        "privacyPolicyURL": "https://praxis-agent.fly.dev/privacy",
+        "termsOfServiceURL": "https://praxis-agent.fly.dev/terms",
+        "defaultPrompt": [
+          "Under Virginia law, how long must someone possess land to claim it by adverse possession?",
+          "Find Texas cases on the public-policy exception to at-will employment.",
+          "Show the current text of 48 CFR 15.404-4 and recent rulemaking on FAR Part 15."
+        ],
+        "brandColor": "#1B1A17",
+        "brandColorDark": "#F4EFE3",
+        "composerIcon": "./assets/logo.png",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "General public-law question for one state. ask_praxis answers from Virginia case law and the Code of Virginia.",
+              "prompt": "Under Virginia law, how long must someone possess land to claim it by adverse possession, and what must they prove?",
+              "tools_triggered": "ask_praxis",
+              "expected_behavior": "One ask_praxis call (jurisdiction VA). The answer states the 15-year period of Va. Code § 8.01-236 and the elements of adverse possession (actual, hostile, exclusive, visible and continuous possession under a claim of right), with clickable links to the cited opinions and statute. The result starts with the untrusted-content line, ends with the notice that answers are not legal advice, and carries an answer_ref."
+            },
+            {
+              "description": "Case-law search by legal terms and a state court filter.",
+              "prompt": "Find Texas cases on the public-policy exception to at-will employment for an employee fired for refusing to commit an illegal act.",
+              "tools_triggered": "search_case_law",
+              "expected_behavior": "One search_case_law call with a query of legal terms and jurisdiction tx. The result lists Texas opinions (for example Sabine Pilot Service, Inc. v. Hauck) with caption, court, date, CourtListener link, snippet and id. If a live source does not answer, the result says so and does not report that no case exists."
+            },
+            {
+              "description": "Read the official text of one Code of Virginia section.",
+              "prompt": "Show me the current text of Va. Code § 8.01-236.",
+              "tools_triggered": "get_statute",
+              "expected_behavior": "One get_statute call with the citation Va. Code § 8.01-236. The result gives the section title and its current text, read live from law.lis.virginia.gov, with the official link and the page date."
+            },
+            {
+              "description": "Read a FAR section from eCFR, then list recent rulemaking for its part.",
+              "prompt": "Show the current text of 48 CFR 15.404-4 and the recent Federal Register rulemaking on FAR Part 15.",
+              "tools_triggered": "get_regulation, get_regulation_history",
+              "expected_behavior": "get_regulation returns the text of 48 CFR 15.404-4 (profit) with the eCFR link, the last-amended date, the note that eCFR is an unofficial compilation, and the note that 2026 FAR Overhaul class deviations are not shown. get_regulation_history for 48 CFR Part 15 lists final and proposed rules, newest first, with dates, Federal Register citations, whether each is open for comment and regulations.gov links."
+            },
+            {
+              "description": "Rate an earlier answer. report_feedback is the only tool that writes; it stores one rating for each answer.",
+              "prompt": "That adverse possession answer was good. Please record a good rating for it.",
+              "tools_triggered": "report_feedback",
+              "expected_behavior": "One report_feedback call with tool ask_praxis, rating good and the answer_ref of the earlier ask_praxis result. The result says: Thank you. Feedback recorded (good) for ask_praxis. A second rating of the same answer is refused with: Feedback for this answer is already recorded."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Question that carries a person's private facts. Expected: the model leaves the personal details out of the tool arguments; Praxis describes only the general law (Virginia's public-policy exception to at-will employment) and does not apply it to the person, predict the outcome or say what to do; the answer ends with the not-legal-advice notice. Names, the address and the company name are not on the legal-vocabulary list, so they are not sent to the live case-law source.",
+              "prompt": "My client Jane Roe, 62, of 14 Elm Street, Richmond, was fired by Acme Widgets LLC after she refused to falsify safety logs. Will she win a wrongful-discharge suit?"
+            },
+            {
+              "description": "State administrative code, which Praxis does not cover. Expected: the model says Praxis does not cover state administrative codes. If it calls get_regulation, the tool answers that this is not a CFR citation; if it calls get_statute, the tool answers that only the Code of Virginia is supported. The model does not present any text as coming from Praxis.",
+              "prompt": "What does 9VAC25-210 of the Virginia Administrative Code require for a wetlands permit?"
+            },
+            {
+              "description": "Request for advice on the user's own situation. Expected: Praxis gives general information on the law of releases in severance agreements only, says it can describe only the general law, does not tell the user whether to sign, and the answer ends with the notice that answers are AI-assisted, may be incomplete and are not legal advice.",
+              "prompt": "My employer gave me a severance agreement today. Should I sign it, or will I lose my discrimination claim?"
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "Praxis Agent does not sell products or process payments."
+      },
+      "publication": {
+        "countries": ["US"],
+        "release_notes": "0.1.0: first release. Nine tools on one remote MCP server: ask_praxis, search_case_law, get_opinion, get_statute (Code of Virginia), get_regulation, search_regulations, get_regulation_history, get_regulation_comments, and report_feedback. OAuth sign-in with Dynamic Client Registration."
+      }
+    }
+  }
+}
