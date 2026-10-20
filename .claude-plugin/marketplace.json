@@ -1,8 +1,8 @@
 {
   "name": "lefv",
-  "description": "LEFV plugins for Claude Code.",
+  "description": "Plugins from CCL Consulting LLC for Claude Code.",
   "owner": {
-    "name": "LEFV",
+    "name": "CCL Consulting LLC",
     "email": "luis@lefv.io"
   },
   "plugins": [
