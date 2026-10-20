@@ -1,0 +1,16 @@
+{
+  "name": "lefv",
+  "description": "LEFV plugins for Claude Code.",
+  "owner": {
+    "name": "LEFV",
+    "email": "luis@lefv.io"
+  },
+  "plugins": [
+    {
+      "name": "praxis",
+      "source": "./",
+      "description": "Praxis Agent: answers on public US law (statutes, court rules, case law, federal regulations), with links to its sources.",
+      "version": "0.1.0"
+    }
+  ]
+}

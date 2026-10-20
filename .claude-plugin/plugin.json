@@ -1,0 +1,9 @@
+{
+  "name": "praxis",
+  "description": "Praxis Agent: answers on public US law (statutes, court rules, case law, federal regulations), with links to its sources. Connects the remote MCP server at praxis-agent.fly.dev over OAuth.",
+  "version": "0.1.0",
+  "author": {
+    "name": "LEFV"
+  },
+  "homepage": "https://praxis-agent.fly.dev/connect"
+}

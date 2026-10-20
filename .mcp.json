@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "praxis-agent": {
+      "type": "http",
+      "url": "https://praxis-agent.fly.dev/mcp/agent"
+    }
+  }
+}
